@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: olist
+    description: "Fichiers CSV bruts Olist chargés dans le schéma raw de DuckDB"
+    schema: raw
+    tables:
+      - name: orders
+      - name: order_items
+      - name: order_payments
+      - name: order_reviews
+      - name: customers
+      - name: sellers
+      - name: products
+      - name: geolocation
+      - name: product_category_name_translation
