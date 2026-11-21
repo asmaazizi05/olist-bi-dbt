@@ -18,3 +18,13 @@ models:
   olist_dbt:
     staging:
       +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  olist_dbt:
+    ref_holidays_events:
+      +column_types:
+        event_date: date

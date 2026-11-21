@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_order_payments
+    description: "Paiements consolidés : une ligne par commande."
+    columns:
+      - name: order_id
+        description: "Identifiant de la commande"
+        tests: [unique, not_null]
+      - name: nb_payments
+        description: "Nombre de paiements de la commande"
+      - name: total_payment_value
+        description: "Somme des paiements (BRL)"
+      - name: payment_installments
+        description: "Nombre maximal d'échéances (minimum 1)"
+      - name: main_payment_type
+        description: "Mode de paiement au plus grand montant"
+        tests: [not_null]

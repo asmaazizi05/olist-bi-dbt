@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: "Commandes nettoyées et typées (dates en timestamp)."
+    columns:
+      - name: order_id
+        description: "Identifiant unique de la commande"
+        tests: [unique, not_null]
+      - name: customer_id
+        description: "Identifiant client (propre à la commande)"
+        tests: [not_null]
+      - name: order_status
+        description: "Statut de la commande"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+      - name: purchased_at
+        description: "Date et heure d'achat"
+        tests: [not_null]
+      - name: delivered_at
+        description: "Date de livraison au client (NULL si non livrée)"
+      - name: estimated_delivery_at
+        description: "Date de livraison estimée"
+
+  - name: stg_customers
+    description: "Clients. customer_id est propre à chaque commande, customer_unique_id identifie la personne."
+    columns:
+      - name: customer_id
+        description: "Identifiant client par commande"
+        tests: [unique, not_null]
+      - name: customer_unique_id
+        description: "Identifiant unique de la personne (sert à mesurer les clients récurrents)"
+        tests: [not_null]
+      - name: zip_code_prefix
+        description: "Préfixe du code postal"
+      - name: city
+        description: "Ville (minuscules)"
+      - name: state
+        description: "État (code à 2 lettres)"
+
+  - name: stg_sellers
+    description: "Vendeurs nettoyés."
+    columns:
+      - name: seller_id
+        description: "Identifiant du vendeur"
+        tests: [unique, not_null]
+      - name: zip_code_prefix
+        description: "Préfixe du code postal"
+      - name: city
+        description: "Ville"
+      - name: state
+        description: "État"
+
+  - name: stg_products
+    description: "Produits (faute 'lenght' de la source corrigée)."
+    columns:
+      - name: product_id
+        description: "Identifiant du produit"
+        tests: [unique, not_null]
+      - name: product_category_name
+        description: "Catégorie en portugais (peut être NULL)"
+
+  - name: stg_geolocation
+    description: "Géolocalisation dédoublonnée : 1 000 163 lignes brutes réduites à une ligne par préfixe de code postal (moyenne des coordonnées)."
+    columns:
+      - name: zip_code_prefix
+        description: "Préfixe du code postal (clé)"
+        tests: [unique, not_null]
+      - name: latitude
+        description: "Latitude moyenne"
+      - name: longitude
+        description: "Longitude moyenne"

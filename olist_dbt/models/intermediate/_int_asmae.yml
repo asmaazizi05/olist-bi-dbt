@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_order_reviews
+    description: "Avis consolidés : une ligne par commande (avis le plus récent conservé)."
+    columns:
+      - name: order_id
+        description: "Identifiant de la commande"
+        tests: [unique, not_null]
+      - name: review_score
+        description: "Note de 1 à 5 de l'avis retenu"
+      - name: nb_reviews
+        description: "Nombre d'avis reçus par la commande dans les données brutes"
+      - name: has_comment
+        description: "Vrai si l'avis contient un commentaire"

@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Dimension calendrier 2016-2018. Hiérarchie jour > mois > trimestre > année."
+    columns:
+      - name: date_key
+        description: "Date (clé primaire)"
+        tests: [unique, not_null]
+      - name: year_month
+        description: "Année-mois (AAAA-MM)"
+      - name: is_holiday_or_event
+        description: "Vrai si jour férié ou événement commercial"
+      - name: event_name
+        description: "Nom du jour férié / événement (seed ref_holidays_events)"
+
+  - name: dim_product
+    description: "Dimension produit. Hiérarchie produit > catégorie. Catégories manquantes = 'unknown'."
+    columns:
+      - name: product_id
+        description: "Clé primaire du produit"
+        tests: [unique, not_null]
+      - name: category
+        description: "Catégorie en anglais (ou nom portugais si non traduite)"
+        tests: [not_null]
+
+  - name: dim_payment_type
+    description: "Dimension mode de paiement."
+    columns:
+      - name: payment_type
+        description: "Clé primaire : code du mode de paiement"
+        tests: [unique, not_null]
+      - name: payment_type_label
+        description: "Libellé lisible"
