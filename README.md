@@ -23,7 +23,7 @@ Comment la direction d'Olist peut-elle piloter ses ventes (catégories, régions
 - **Licence** : CC BY-NC-SA 4.0 (usage non commercial, attribution, partage dans les mêmes conditions).
 - **Anonymisation** : les données sont anonymisées. Aucune tentative de ré-identification des clients ou des vendeurs n'est faite.
 - Les CSV ne sont pas versionnés dans ce dépôt (dossier `data/` ignoré par Git). Il faut les télécharger depuis Kaggle.
-- **Enrichissements prévus (seeds dbt)** : correspondance état brésilien → région (IBGE) et jours fériés / événements commerciaux brésiliens. La source, la licence, la date de récupération et les transformations seront indiquées dans `olist_dbt/seeds/`.
+- **Enrichissements (seeds dbt)** : correspondance état brésilien → région (IBGE, `ref_state_region`) et jours fériés / événements commerciaux brésiliens (`ref_holidays_events`). La source, la licence, la date de récupération et les transformations sont indiquées dans `olist_dbt/seeds/` (fichiers `README_*.md`).
 ## Stack technique
  
 | Rôle | Outil |
@@ -31,7 +31,7 @@ Comment la direction d'Olist peut-elle piloter ses ventes (catégories, régions
 | Entrepôt de données | DuckDB (fichier local `olist.duckdb`) |
 | Transformation (T) | dbt-core 1.12 avec l'adaptateur dbt-duckdb |
 | Chargement (E et L) | Script Python `load_raw.py` |
-| Restitution | À compléter (Power BI, Metabase, Looker Studio...) |
+| Restitution | À confirmer : outil du tableau de bord (Power BI, Metabase, Looker Studio...) |
 | Versionnement | Git / GitHub |
  
 ## Architecture ELT
@@ -78,7 +78,7 @@ Tableau de bord
 Le détail (définition, formule, dimensions, intérêt métier) se trouve dans le document du livrable 2.
  
 ## Structure du dépôt
- 
+
 ```
 olist_bi/
 ├── .gitignore
@@ -89,16 +89,17 @@ olist_bi/
     ├── dbt_project.yml
     ├── profiles.yml       # Profil de connexion DuckDB
     ├── models/
-    │   └── staging/
-    │       ├── _sources.yml
-    │       └── stg_orders.sql
-    ├── seeds/
+    │   ├── staging/       # _sources.yml, stg_* (9 modèles)
+    │   ├── intermediate/  # int_order_payments, int_order_reviews
+    │   └── marts/         # fact_order_items, dim_date, dim_customer,
+    │                      # dim_seller, dim_product, dim_payment_type
+    ├── seeds/             # ref_state_region, ref_holidays_events (+ README de provenance)
+    ├── tests/             # 4 tests métier (SQL)
+    ├── analyses/          # kpi_queries.sql (les 10 KPI)
     ├── macros/
-    ├── tests/
-    ├── analyses/
     └── snapshots/
 ```
- 
+
 ## Reproduire le projet
  
 ### 1. Prérequis
@@ -144,35 +145,42 @@ Résultat attendu (nombre de lignes par table du schéma `raw`) :
 ```bash
 cd olist_dbt
 dbt debug --profiles-dir .         # doit afficher : All checks passed!
-dbt run --profiles-dir .           # construit les modèles
+dbt build --profiles-dir .         # seeds + modèles + tests, dans l'ordre des dépendances
 ```
+`dbt build` charge d'abord les seeds (régions, jours fériés), nécessaires aux dimensions `dim_customer`, `dim_seller` et `dim_date`. On peut aussi lancer les étapes séparément : `dbt seed`, `dbt run`, `dbt test` (toujours avec `--profiles-dir .`).
+
 Vérification :
 ```bash
 cd ..
 python -c "import duckdb; con=duckdb.connect('olist.duckdb'); print(con.sql('select count(*) from main.stg_orders'))"
 ```
 Résultat attendu : `99441`.
- 
-### 6. Tests et documentation (à venir)
+
+### 6. Documentation et lineage
 ```bash
 cd olist_dbt
-dbt test --profiles-dir .
 dbt docs generate --profiles-dir .
 dbt docs serve --profiles-dir .    # documentation et graphe de dépendances (lineage)
 ```
- 
+
+### 7. Calculer les KPI
+Les 10 requêtes KPI sont dans `olist_dbt/analyses/kpi_queries.sql`. On peut les exécuter dans DuckDB en remplaçant `{{ ref('fact_order_items') }}` par `main.fact_order_items` (et `{{ ref('dim_customer') }}` par `main.dim_customer`), ou les compiler avec `dbt compile`.
+
 ## Avancement
- 
+
 - [x] Livrable 1 : installation de dbt-core et DuckDB, chargement des CSV bruts, `dbt debug` et `dbt run`
-- [x] Sources dbt déclarées, premier modèle `stg_orders`
+- [x] Sources dbt déclarées, modèles staging des 9 tables
 - [x] Livrable 2 : KPI et schéma en étoile (document PDF)
-- [ ] Modèles staging des autres tables
-- [ ] Couche intermediate (consolidation des paiements et des avis par commande)
-- [ ] Marts : table de faits et dimensions
-- [ ] Seeds d'enrichissement (régions, jours fériés) avec provenance et licence
-- [ ] Tests dbt (unicité, non-nullité, relations, test métier) et documentation
+- [x] Couche intermediate (consolidation des paiements et des avis par commande)
+- [x] Marts : table de faits `fact_order_items` et 5 dimensions
+- [x] Seeds d'enrichissement (régions, jours fériés) avec provenance et licence
+- [x] Tests dbt (unicité, non-nullité, relations, valeurs acceptées, 4 tests métier) et descriptions des colonnes
+- [x] Requêtes SQL des 10 KPI (`analyses/kpi_queries.sql`)
+- [ ] Documentation dbt générée (`dbt docs`) et capture du lineage
 - [ ] Tableau de bord et parcours narratif
+- [ ] Support de présentation
 - [ ] Soutenance
+
 ## Déclaration d'usage de l'IA générative
  
 Des outils d'IA générative (Claude, Anthropic) ont été utilisés comme aide à l'installation, à la conception (KPI, schéma en étoile) et à la rédaction. Chaque élément livré est compris et peut être expliqué par les membres de l'équipe : Asmae AIT BILFAKIH et Asma AZIZI.
