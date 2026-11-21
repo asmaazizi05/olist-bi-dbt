@@ -1,191 +1,209 @@
-# Piloter une place de marché e-commerce (Olist) : projet BI avec dbt
- 
-Projet de fin de module BI, Master IA 2026, Faculté des Sciences, Université Cadi Ayyad (Marrakech).
-Enseignante : Jihad ZAHIR.
- 
-## Équipe
- 
-| Membre | Contribution |
-|---|---|
-| **Asmae AIT BILFAKIH** | Pipeline de données : installation et chargement des données (`load_raw.py`), modèles staging (`stg_customers`, `stg_sellers`, `stg_products`, `stg_geolocation`), seed état → région (IBGE), `int_order_reviews`, table de faits `fact_order_items`, `dim_customer`, `dim_seller`, test métier, documentation dbt (lineage), connexion DuckDB et requêtes SQL des KPI, mise à jour du README |
-| **Asma AZIZI** | Modélisation et restitution : modèles staging (`stg_order_items`, `stg_order_payments`, `stg_order_reviews`, `stg_product_category_translation`), seed jours fériés et événements commerciaux, `int_order_payments`, `dim_date`, `dim_product`, `dim_payment_type`, tests `relationships`, tableau de bord (pages ventes, logistique, satisfaction, vendeurs), document du livrable 2 (KPI et schéma en étoile) |
-| **Ensemble** | Cadrage et choix de l'outil de restitution, parcours narratif du tableau de bord, support de présentation, soutenance |
- 
-## Problématique
- 
-Comment la direction d'Olist peut-elle piloter ses ventes (catégories, régions), sa logistique (délais, retards) et la satisfaction de ses clients (notes), et identifier les vendeurs et les zones à améliorer ?
- 
-**Public cible** : direction générale, responsable logistique, responsable des vendeurs.
- 
-## Données
- 
-- **Source principale** : Brazilian E-Commerce Public Dataset by Olist (Kaggle), environ 100 000 commandes entre 2016 et 2018.
-- **Licence** : CC BY-NC-SA 4.0 (usage non commercial, attribution, partage dans les mêmes conditions).
-- **Anonymisation** : les données sont anonymisées. Aucune tentative de ré-identification des clients ou des vendeurs n'est faite.
-- Les CSV ne sont pas versionnés dans ce dépôt (dossier `data/` ignoré par Git). Il faut les télécharger depuis Kaggle.
-- **Enrichissements (seeds dbt)** : correspondance état brésilien → région (IBGE, `ref_state_region`) et jours fériés / événements commerciaux brésiliens (`ref_holidays_events`). La source, la licence, la date de récupération et les transformations sont indiquées dans `olist_dbt/seeds/` (fichiers `README_*.md`).
-## Stack technique
- 
-| Rôle | Outil |
-|---|---|
-| Entrepôt de données | DuckDB (fichier local `olist.duckdb`) |
-| Transformation (T) | dbt-core 1.12 avec l'adaptateur dbt-duckdb |
-| Chargement (E et L) | Script Python `load_raw.py` |
-| Restitution | À confirmer : outil du tableau de bord (Power BI, Metabase, Looker Studio...) |
-| Versionnement | Git / GitHub |
- 
-## Architecture ELT
- 
-```
-CSV Olist (data/)
-      │  load_raw.py  (E et L)
-      ▼
-DuckDB : schéma raw        ← sources dbt (olist.*)
-      │  dbt
-      ▼
-staging       nettoyage et typage          (stg_*)
-intermediate  règles métier                (int_* : paiements et avis consolidés par commande)
-marts         schéma en étoile             (fact_order_items, dim_*)
-      │
-      ▼
-Tableau de bord
-```
- 
-## Modèle dimensionnel (schéma en étoile)
- 
-**Table de faits** `fact_order_items` : une ligne = un article d'une commande (`order_id` + `order_item_id`).
- 
-**Mesures** : `price`, `freight_value`, `delivery_days`, `delay_days`, `is_late`, `review_score`, `payment_installments`.
- 
-**Dimensions** :
-- `dim_date` : jour → mois → trimestre → année
-- `dim_customer` : ville → état → région
-- `dim_seller` : ville → état → région
-- `dim_product` : produit → catégorie
-- `dim_payment_type` : mode de paiement
-## KPI
- 
-1. Chiffre d'affaires
-2. Nombre de commandes
-3. Panier moyen
-4. Panier moyen par nombre d'échéances
-5. Délai moyen de livraison
-6. Taux de retard
-7. Note moyenne des avis
-8. Part d'avis négatifs
-9. Taux de clients récurrents
-10. Concentration des ventes par vendeur
-Le détail (définition, formule, dimensions, intérêt métier) se trouve dans le document du livrable 2.
- 
-## Structure du dépôt
+# 🎙️ Speech Data Collection Pipeline
+
+Pipeline automatisé pour extraire **≥ 10 heures d'audio** contenant uniquement
+de la parole humaine, destiné aux projets de **détection de langue parlée** (ML).
+
+---
+
+## 🏗️ Architecture du pipeline
 
 ```
-olist_bi/
-├── .gitignore
-├── README.md
-├── load_raw.py            # Chargement des CSV dans DuckDB (schéma raw)
-├── data/                  # CSV Olist (non versionnés, à télécharger)
-└── olist_dbt/             # Projet dbt
-    ├── dbt_project.yml
-    ├── profiles.yml       # Profil de connexion DuckDB
-    ├── models/
-    │   ├── staging/       # _sources.yml, stg_* (9 modèles)
-    │   ├── intermediate/  # int_order_payments, int_order_reviews
-    │   └── marts/         # fact_order_items, dim_date, dim_customer,
-    │                      # dim_seller, dim_product, dim_payment_type
-    ├── seeds/             # ref_state_region, ref_holidays_events (+ README de provenance)
-    ├── tests/             # 4 tests métier (SQL)
-    ├── analyses/          # kpi_queries.sql (les 10 KPI)
-    ├── macros/
-    └── snapshots/
+YouTube URLs
+    │
+    ▼
+[1] yt-dlp — Téléchargement vidéos
+    │
+    ▼
+[2] ffmpeg — Conversion WAV mono 16kHz
+    │
+    ▼
+[3] inaSpeechSegmenter / pyannote — Segmentation
+    │  ├── speech ✓
+    │  ├── music  ✗
+    │  ├── noise  ✗
+    │  └── silence ✗
+    ▼
+[4] Filtrage → segments speech uniquement
+    │
+    ▼
+[5] ffmpeg — Extraction + suppression silences
+    │
+    ▼
+[6] Accumulation jusqu'à ≥ 10h
+    │
+    ├── segments/seg_00001.wav
+    ├── segments/seg_00002.wav
+    ├── ...
+    ├── speech_dataset_final.wav  (optionnel)
+    ├── segments_YYYYMMDD.csv
+    └── segments_YYYYMMDD.json
 ```
 
-## Reproduire le projet
- 
-### 1. Prérequis
-- Python 3.10 ou supérieur
-- Git
-- Les 9 fichiers CSV Olist téléchargés depuis Kaggle
-### 2. Récupérer le dépôt et les données
+---
+
+## 📦 Installation
+
+### Prérequis système
 ```bash
-git clone <URL_DU_DEPOT>
-cd olist_bi
-mkdir -p data
-# Copier les 9 fichiers .csv dans le dossier data/
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y ffmpeg python3-pip python3-venv
+
+# macOS
+brew install ffmpeg
 ```
-> **Attention** : si le projet est dans un dossier synchronisé avec iCloud (Bureau, Documents), les gros fichiers peuvent être « déchargés » dans le cloud. Placez le projet dans un dossier non synchronisé.
- 
-### 3. Environnement Python et installation de dbt
+
+### Installation automatique
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate          # Windows : .venv\Scripts\activate
-pip install dbt-core dbt-duckdb
-dbt --version
+chmod +x setup.sh
+./setup.sh
 ```
- 
-### 4. Charger les CSV bruts dans DuckDB (E et L)
+
+### Installation manuelle
 ```bash
-python load_raw.py
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+pip install yt-dlp pydub numpy scipy tqdm
+pip install inaSpeechSegmenter  # + TensorFlow
 ```
-Résultat attendu (nombre de lignes par table du schéma `raw`) :
- 
-| Table | Lignes |
-|---|---|
-| raw.customers | 99 441 |
-| raw.geolocation | 1 000 163 |
-| raw.order_items | 112 650 |
-| raw.order_payments | 103 886 |
-| raw.order_reviews | 99 224 |
-| raw.orders | 99 441 |
-| raw.products | 32 951 |
-| raw.sellers | 3 095 |
-| raw.product_category_name_translation | 71 |
- 
-### 5. Vérifier la connexion et exécuter dbt (T)
+
+---
+
+## 🚀 Utilisation
+
+### Lancement standard (10h)
 ```bash
-cd olist_dbt
-dbt debug --profiles-dir .         # doit afficher : All checks passed!
-dbt build --profiles-dir .         # seeds + modèles + tests, dans l'ordre des dépendances
+source venv/bin/activate
+python pipeline.py --target-hours 10
 ```
-`dbt build` charge d'abord les seeds (régions, jours fériés), nécessaires aux dimensions `dim_customer`, `dim_seller` et `dim_date`. On peut aussi lancer les étapes séparément : `dbt seed`, `dbt run`, `dbt test` (toujours avec `--profiles-dir .`).
 
-Vérification :
+### Avec sources personnalisées
 ```bash
-cd ..
-python -c "import duckdb; con=duckdb.connect('olist.duckdb'); print(con.sql('select count(*) from main.stg_orders'))"
+# Éditer sources_example.json ou créer le vôtre
+python pipeline.py --sources-file mes_sources.json --target-hours 10
 ```
-Résultat attendu : `99441`.
 
-### 6. Documentation et lineage
+### Options complètes
 ```bash
-cd olist_dbt
-dbt docs generate --profiles-dir .
-dbt docs serve --profiles-dir .    # documentation et graphe de dépendances (lineage)
+python pipeline.py \
+  --output-dir    dataset/           # Répertoire de sortie
+  --target-hours  10                 # Heures cibles
+  --sources-file  sources.json       # Sources YouTube
+  --pyannote-token HF_TOKEN          # Token HuggingFace (optionnel)
+  --no-concat                        # Ne pas créer le fichier final
+  --no-silence-removal               # Garder les silences
+  --log-level     INFO               # DEBUG, INFO, WARNING
 ```
 
-### 7. Calculer les KPI
-Les 10 requêtes KPI sont dans `olist_dbt/analyses/kpi_queries.sql`. On peut les exécuter dans DuckDB en remplaçant `{{ ref('fact_order_items') }}` par `main.fact_order_items` (et `{{ ref('dim_customer') }}` par `main.dim_customer`), ou les compiler avec `dbt compile`.
+---
 
-## Avancement
+## 📁 Structure des sorties
 
-- [x] Livrable 1 : installation de dbt-core et DuckDB, chargement des CSV bruts, `dbt debug` et `dbt run`
-- [x] Sources dbt déclarées, modèles staging des 9 tables
-- [x] Livrable 2 : KPI et schéma en étoile (document PDF)
-- [x] Couche intermediate (consolidation des paiements et des avis par commande)
-- [x] Marts : table de faits `fact_order_items` et 5 dimensions
-- [x] Seeds d'enrichissement (régions, jours fériés) avec provenance et licence
-- [x] Tests dbt (unicité, non-nullité, relations, valeurs acceptées, 4 tests métier) et descriptions des colonnes
-- [x] Requêtes SQL des 10 KPI (`analyses/kpi_queries.sql`)
-- [ ] Documentation dbt générée (`dbt docs`) et capture du lineage
-- [ ] Tableau de bord et parcours narratif
-- [ ] Support de présentation
-- [ ] Soutenance
+```
+dataset/
+├── raw/                    # Fichiers téléchargés (originaux)
+├── converted/              # WAV 16kHz mono convertis
+├── segments/               # Segments speech extraits
+│   ├── seg_00001_video1.wav
+│   ├── seg_00002_video1.wav
+│   └── ...
+├── speech_dataset_YYYYMMDD.wav   # Dataset final concaténé
+├── segments_YYYYMMDD.csv         # Métadonnées CSV
+├── segments_YYYYMMDD.json        # Métadonnées JSON
+└── pipeline.log                  # Logs du pipeline
+```
 
-## Déclaration d'usage de l'IA générative
- 
-Des outils d'IA générative (Claude, Anthropic) ont été utilisés comme aide à l'installation, à la conception (KPI, schéma en étoile) et à la rédaction. Chaque élément livré est compris et peut être expliqué par les membres de l'équipe : Asmae AIT BILFAKIH et Asma AZIZI.
- 
-## Licences et crédits
- 
-- **Données** : Olist, via Kaggle, licence CC BY-NC-SA 4.0.
-- **Sources externes (seeds)** : à citer ici avec leur licence au moment de leur ajout.
+### Format CSV/JSON
+```json
+{
+  "label": "speech",
+  "start": 12.345,
+  "end": 28.901,
+  "duration": 16.556,
+  "source_file": "abc123_16k.wav",
+  "output_file": "seg_00001_abc123.wav",
+  "actual_duration": 14.2,
+  "total_accumulated_hours": 0.004
+}
+```
+
+---
+
+## 🔧 Segmenteurs disponibles
+
+### inaSpeechSegmenter (recommandé)
+- ✅ Simple à installer, pas de token requis
+- ✅ Distingue speech / music / noise
+- ✅ Détecte male/female (optionnel)
+- ⚠️ Nécessite TensorFlow
+
+```bash
+pip install inaSpeechSegmenter
+```
+
+### pyannote.audio (plus précis)
+- ✅ State-of-the-art, très précis
+- ✅ Speaker diarization intégré
+- ⚠️ Nécessite un token HuggingFace gratuit
+- ⚠️ Nécessite PyTorch
+
+```bash
+pip install pyannote.audio
+# Token: https://huggingface.co/settings/tokens
+```
+
+---
+
+## 🎁 Modules bonus
+
+### Diarisation des locuteurs
+```python
+from diarization_bonus import diarize_audio, split_by_speaker
+
+segments = diarize_audio(wav_path, hf_token="votre_token")
+files_by_speaker = split_by_speaker(wav_path, segments, output_dir)
+```
+
+### Organisation par langue
+```python
+from diarization_bonus import organize_by_language
+
+stats = organize_by_language(segments_dir, output_dir)
+# Crée: dataset/fr/, dataset/en/, dataset/ar/, ...
+```
+
+### Rapport de qualité
+```python
+from diarization_bonus import generate_quality_report
+
+report = generate_quality_report(segments_dir, "report.json")
+```
+
+---
+
+## 💡 Conseils pour maximiser la qualité
+
+1. **Privilégier les sources propres** : interviews radio, TED Talks, documentaires
+2. **Éviter** les vidéos avec musique de fond (vlogs, clips musicaux)
+3. **Durée minimale** : vidéos > 5 minutes pour rentabiliser le traitement
+4. **Diversifier les sources** pour un dataset équilibré
+5. **Vérifier manuellement** un échantillon des segments exportés
+
+---
+
+## ⚡ Performance attendue
+
+| Source | Durée vidéo | Speech extrait | Temps traitement |
+|--------|-------------|----------------|------------------|
+| TED Talk | 15 min | ~12 min | ~3 min |
+| Podcast | 60 min | ~50 min | ~12 min |
+| Interview | 30 min | ~25 min | ~6 min |
+
+**Pour 10h de speech ≈ 12-15h de vidéos source ≈ 2-4h de traitement**
+
+---
+
+## 📜 Licence
+
+Usage libre pour projets de recherche et ML.
+Respecter les CGU YouTube et les droits d'auteur des contenus téléchargés.
