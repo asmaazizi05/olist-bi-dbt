@@ -1,0 +1,52 @@
+event_date,event_name,event_type
+2016-01-01,Confraternização Universal,jour_ferie
+2016-02-09,Carnaval,jour_ferie
+2016-03-15,Dia do Consumidor,evenement_commercial
+2016-03-25,Sexta-feira Santa,jour_ferie
+2016-04-21,Tiradentes,jour_ferie
+2016-05-01,Dia do Trabalho,jour_ferie
+2016-05-08,Dia das Mães,evenement_commercial
+2016-05-26,Corpus Christi,jour_ferie
+2016-06-12,Dia dos Namorados,evenement_commercial
+2016-08-14,Dia dos Pais,evenement_commercial
+2016-09-07,Independência do Brasil,jour_ferie
+2016-10-12,Nossa Senhora Aparecida / Dia das Crianças,jour_ferie
+2016-11-02,Finados,jour_ferie
+2016-11-15,Proclamação da República,jour_ferie
+2016-11-25,Black Friday,evenement_commercial
+2016-11-28,Cyber Monday,evenement_commercial
+2016-12-25,Natal,jour_ferie
+2017-01-01,Confraternização Universal,jour_ferie
+2017-02-28,Carnaval,jour_ferie
+2017-03-15,Dia do Consumidor,evenement_commercial
+2017-04-14,Sexta-feira Santa,jour_ferie
+2017-04-21,Tiradentes,jour_ferie
+2017-05-01,Dia do Trabalho,jour_ferie
+2017-05-14,Dia das Mães,evenement_commercial
+2017-06-12,Dia dos Namorados,evenement_commercial
+2017-06-15,Corpus Christi,jour_ferie
+2017-08-13,Dia dos Pais,evenement_commercial
+2017-09-07,Independência do Brasil,jour_ferie
+2017-10-12,Nossa Senhora Aparecida / Dia das Crianças,jour_ferie
+2017-11-02,Finados,jour_ferie
+2017-11-15,Proclamação da República,jour_ferie
+2017-11-24,Black Friday,evenement_commercial
+2017-11-27,Cyber Monday,evenement_commercial
+2017-12-25,Natal,jour_ferie
+2018-01-01,Confraternização Universal,jour_ferie
+2018-02-13,Carnaval,jour_ferie
+2018-03-15,Dia do Consumidor,evenement_commercial
+2018-03-30,Sexta-feira Santa,jour_ferie
+2018-04-21,Tiradentes,jour_ferie
+2018-05-01,Dia do Trabalho,jour_ferie
+2018-05-13,Dia das Mães,evenement_commercial
+2018-05-31,Corpus Christi,jour_ferie
+2018-06-12,Dia dos Namorados,evenement_commercial
+2018-08-12,Dia dos Pais,evenement_commercial
+2018-09-07,Independência do Brasil,jour_ferie
+2018-10-12,Nossa Senhora Aparecida / Dia das Crianças,jour_ferie
+2018-11-02,Finados,jour_ferie
+2018-11-15,Proclamação da República,jour_ferie
+2018-11-23,Black Friday,evenement_commercial
+2018-11-26,Cyber Monday,evenement_commercial
+2018-12-25,Natal,jour_ferie

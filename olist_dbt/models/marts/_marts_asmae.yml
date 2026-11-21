@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Dimension client. Hiérarchie ville > état > région."
+    columns:
+      - name: customer_id
+        description: "Clé primaire (un client_id par commande)"
+        tests: [unique, not_null]
+      - name: customer_unique_id
+        description: "Identifiant de la personne"
+        tests: [not_null]
+      - name: region
+        description: "Région brésilienne (seed ref_state_region), 'Inconnue' si absente"
+        tests: [not_null]
+
+  - name: dim_seller
+    description: "Dimension vendeur. Hiérarchie ville > état > région."
+    columns:
+      - name: seller_id
+        description: "Clé primaire"
+        tests: [unique, not_null]
+      - name: region
+        description: "Région brésilienne, 'Inconnue' si absente"
+        tests: [not_null]
+
+  - name: fact_order_items
+    description: >
+      Table de faits. Grain : un article d'une commande (order_id + order_item_id).
+      Commandes annulées ou indisponibles exclues.
+    columns:
+      - name: order_id
+        description: "Commande"
+        tests: [not_null]
+      - name: order_item_id
+        description: "Numéro d'article dans la commande"
+        tests: [not_null]
+      - name: customer_id
+        description: "Clé vers dim_customer"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_id
+      - name: seller_id
+        description: "Clé vers dim_seller"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_seller')
+                field: seller_id
+      - name: product_id
+        description: "Clé vers dim_product"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_id
+      - name: purchase_date_key
+        description: "Date d'achat, clé vers dim_date"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: delivered_date_key
+        description: "Date de livraison, clé vers dim_date (NULL si non livrée)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: payment_type
+        description: "Mode de paiement principal, clé vers dim_payment_type"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_payment_type')
+                field: payment_type
+      - name: price
+        description: "Prix de l'article (BRL)"
+      - name: freight_value
+        description: "Frais de port (BRL)"
+      - name: item_total
+        description: "price + freight_value"
+      - name: delivery_days
+        description: "Jours entre achat et livraison"
+      - name: delay_days
+        description: "Jours entre date estimée et livraison réelle (positif = retard)"
+      - name: is_late
+        description: "Vrai si livré après la date estimée"
+      - name: review_score
+        description: "Note de la commande (1 à 5), niveau commande"
+      - name: payment_installments
+        description: "Nombre d'échéances, niveau commande"

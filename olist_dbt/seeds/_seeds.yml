@@ -1,0 +1,17 @@
+version: 2
+
+seeds:
+  - name: ref_holidays_events
+    description: "Jours fériés brésiliens et événements commerciaux 2016-2018 (voir README_ref_holidays_events.md)."
+    columns:
+      - name: event_date
+        description: "Date de l'événement"
+        tests: [unique, not_null]
+      - name: event_name
+        description: "Nom"
+      - name: event_type
+        description: "jour_ferie ou evenement_commercial"
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['jour_ferie', 'evenement_commercial']
