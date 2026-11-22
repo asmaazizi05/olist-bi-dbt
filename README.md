@@ -51,6 +51,10 @@ marts         schéma en étoile             (fact_order_items, dim_*)
 Tableau de bord
 ```
  
+Lineage dbt (graphe de dépendances généré par `dbt docs`) :
+ 
+![Lineage dbt](docs/lineage.png)
+ 
 ## Modèle dimensionnel (schéma en étoile)
  
 **Table de faits** `fact_order_items` : une ligne = un article d'une commande (`order_id` + `order_item_id`).
@@ -78,13 +82,15 @@ Tableau de bord
 Le détail (définition, formule, dimensions, intérêt métier) se trouve dans le document du livrable 2.
  
 ## Structure du dépôt
-
+ 
 ```
 olist_bi/
 ├── .gitignore
 ├── README.md
 ├── load_raw.py            # Chargement des CSV dans DuckDB (schéma raw)
+├── run_kpis.py            # Exécution des 10 KPI sur olist.duckdb
 ├── data/                  # CSV Olist (non versionnés, à télécharger)
+├── docs/                  # lineage.png (capture du graphe dbt docs)
 └── olist_dbt/             # Projet dbt
     ├── dbt_project.yml
     ├── profiles.yml       # Profil de connexion DuckDB
@@ -99,7 +105,7 @@ olist_bi/
     ├── macros/
     └── snapshots/
 ```
-
+ 
 ## Reproduire le projet
  
 ### 1. Prérequis
@@ -148,26 +154,30 @@ dbt debug --profiles-dir .         # doit afficher : All checks passed!
 dbt build --profiles-dir .         # seeds + modèles + tests, dans l'ordre des dépendances
 ```
 `dbt build` charge d'abord les seeds (régions, jours fériés), nécessaires aux dimensions `dim_customer`, `dim_seller` et `dim_date`. On peut aussi lancer les étapes séparément : `dbt seed`, `dbt run`, `dbt test` (toujours avec `--profiles-dir .`).
-
+ 
 Vérification :
 ```bash
 cd ..
 python -c "import duckdb; con=duckdb.connect('olist.duckdb'); print(con.sql('select count(*) from main.stg_orders'))"
 ```
 Résultat attendu : `99441`.
-
+ 
 ### 6. Documentation et lineage
 ```bash
 cd olist_dbt
 dbt docs generate --profiles-dir .
 dbt docs serve --profiles-dir .    # documentation et graphe de dépendances (lineage)
 ```
-
+ 
 ### 7. Calculer les KPI
-Les 10 requêtes KPI sont dans `olist_dbt/analyses/kpi_queries.sql`. On peut les exécuter dans DuckDB en remplaçant `{{ ref('fact_order_items') }}` par `main.fact_order_items` (et `{{ ref('dim_customer') }}` par `main.dim_customer`), ou les compiler avec `dbt compile`.
-
+Les 10 requêtes KPI sont dans `olist_dbt/analyses/kpi_queries.sql`. Pour les exécuter directement sur DuckDB (après `dbt build`), depuis la racine du dépôt :
+```bash
+python run_kpis.py
+```
+Le script remplace `{{ ref('...') }}` par `main.<table>` et affiche le résultat de chaque KPI. On peut aussi compiler les requêtes avec `dbt compile --profiles-dir .`.
+ 
 ## Avancement
-
+ 
 - [x] Livrable 1 : installation de dbt-core et DuckDB, chargement des CSV bruts, `dbt debug` et `dbt run`
 - [x] Sources dbt déclarées, modèles staging des 9 tables
 - [x] Livrable 2 : KPI et schéma en étoile (document PDF)
@@ -176,11 +186,11 @@ Les 10 requêtes KPI sont dans `olist_dbt/analyses/kpi_queries.sql`. On peut les
 - [x] Seeds d'enrichissement (régions, jours fériés) avec provenance et licence
 - [x] Tests dbt (unicité, non-nullité, relations, valeurs acceptées, 4 tests métier) et descriptions des colonnes
 - [x] Requêtes SQL des 10 KPI (`analyses/kpi_queries.sql`)
-- [ ] Documentation dbt générée (`dbt docs`) et capture du lineage
+- [x] Script d'exécution des KPI (`run_kpis.py`) et documentation du seed `ref_state_region`
+- [x] Documentation dbt générée (`dbt docs`) et capture du lineage (`docs/lineage.png`)
 - [ ] Tableau de bord et parcours narratif
 - [ ] Support de présentation
 - [ ] Soutenance
-
 ## Déclaration d'usage de l'IA générative
  
 Des outils d'IA générative (Claude, Anthropic) ont été utilisés comme aide à l'installation, à la conception (KPI, schéma en étoile) et à la rédaction. Chaque élément livré est compris et peut être expliqué par les membres de l'équipe : Asmae AIT BILFAKIH et Asma AZIZI.
@@ -188,4 +198,7 @@ Des outils d'IA générative (Claude, Anthropic) ont été utilisés comme aide 
 ## Licences et crédits
  
 - **Données** : Olist, via Kaggle, licence CC BY-NC-SA 4.0.
-- **Sources externes (seeds)** : à citer ici avec leur licence au moment de leur ajout.
+- **Sources externes (seeds)** :
+  - `ref_state_region` : IBGE, Divisões regionais do Brasil (https://www.ibge.gov.br/geociencias/cartas-e-mapas/redes-geograficas/15778-divisoes-regionais-do-brasil.html). Aucune licence de réutilisation explicite identifiée : usage académique et non commercial, source citée. Détail dans `olist_dbt/seeds/README_ref_state_region.md`.
+  - `ref_holidays_events` : calendrier officiel des jours fériés fédéraux brésiliens et dates d'événements commerciaux, compilés manuellement par l'équipe. Détail dans `olist_dbt/seeds/README_ref_holidays_events.md`.
+ 
