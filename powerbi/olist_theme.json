@@ -1,0 +1,31 @@
+{
+  "name": "Olist Editorial",
+  "dataColors": ["#2D6B66", "#B04A2F", "#C9A24A", "#1F2A2C", "#8A9A5B", "#7A5C3E", "#A7B7B3", "#D9A58F"],
+  "background": "#FAF8F2",
+  "foreground": "#1F2A2C",
+  "tableAccent": "#B04A2F",
+  "good": "#2D6B66",
+  "bad": "#B04A2F",
+  "neutral": "#C9A24A",
+  "textClasses": {
+    "callout": { "fontSize": 30, "fontFace": "Georgia", "color": "#1F2A2C" },
+    "title": { "fontSize": 12, "fontFace": "Segoe UI Semibold", "color": "#1F2A2C" },
+    "header": { "fontSize": 11, "fontFace": "Segoe UI Semibold", "color": "#6D726F" },
+    "label": { "fontSize": 10, "fontFace": "Segoe UI", "color": "#6D726F" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#FAF8F2" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#DCD5C5" } }, "radius": 0 }],
+        "title": [{ "show": true, "fontFamily": "Segoe UI Semibold", "fontSize": 12, "fontColor": { "solid": { "color": "#1F2A2C" } } }],
+        "visualHeader": [{ "show": false }]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#F3EFE6" } }, "transparency": 0 }]
+      }
+    }
+  }
+}
